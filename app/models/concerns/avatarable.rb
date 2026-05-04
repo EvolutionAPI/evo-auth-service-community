@@ -14,10 +14,15 @@ module Avatarable
     return '' unless avatar.attached?
 
     if avatar.service.class.name == 'ActiveStorage::Service::DiskService'
-      Rails.application.routes.url_helpers.rails_service_blob_proxy_path(avatar.signed_id, avatar.filename)
+      base_url = Rails.application.config.app_url.to_s.chomp('/')
+      path = Rails.application.routes.url_helpers.rails_service_blob_proxy_path(avatar.signed_id, avatar.filename)
+      "#{base_url}#{path}"
     else
       avatar.blob.url(expires_in: 1.week)
     end
+  rescue StandardError => e
+    Rails.logger.error("[Avatarable] Avatar URL generation failed for #{self.class.name}##{id}: #{e.class} - #{e.message}")
+    ''
   end
 
   def fetch_avatar_from_gravatar

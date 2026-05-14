@@ -104,6 +104,21 @@ RSpec.describe ApplicationMailer do
       end
     end
 
+    context 'when the resolved delivery method is not registered in delivery_methods' do
+      before do
+        allow(GlobalConfigService).to receive(:load).with('MAILER_TYPE', 'smtp').and_return('bms')
+        allow(GlobalConfigService).to receive(:load).with('BMS_API_SECRET', nil).and_return('bms-key')
+        allow(GlobalConfigService).to receive(:load).with('MAILER_SENDER_EMAIL', anything).and_return('noreply@example.com')
+        allow(ApplicationMailer).to receive(:delivery_methods).and_wrap_original { |m| m.call.except(:bms) }
+        allow_any_instance_of(Mail::Message).to receive(:delivery_method).with(anything, anything).and_return(nil)
+      end
+
+      it 'logs a warning about the unregistered delivery method' do
+        expect(Rails.logger).to receive(:warn).with(/unregistered delivery method/).at_least(:once)
+        UserMailer.two_factor_authentication_code(user, '123456').message
+      end
+    end
+
     context 'when GlobalConfigService raises an error' do
       before do
         allow(GlobalConfigService).to receive(:load).with('MAILER_TYPE', 'smtp').and_raise(StandardError, 'DB unavailable')

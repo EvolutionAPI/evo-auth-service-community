@@ -49,7 +49,7 @@ RSpec.describe 'MFA backup codes endpoints', type: :request do
     it 'stores codes hashed in the DB' do
       post '/api/v1/mfa/regenerate_backup_codes', headers: auth_headers
       user.reload
-      expect(user.otp_backup_codes).to all(start_with('$2a$'))
+      expect(user.otp_backup_codes).to all(match(/\A\$2[aby]\$/))
     end
 
     it 'invalidates previous codes when called twice' do

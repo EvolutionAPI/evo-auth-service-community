@@ -132,6 +132,7 @@ class Api::V1::MfaController < Api::BaseController
       display_name: user.display_name,
       availability: user.availability,
       mfa_enabled: user.mfa_enabled?,
+      mfa_setup_incomplete: user.mfa_setup_incomplete?,
       confirmed: user.confirmed?
     }
   end
